@@ -1,0 +1,107 @@
+module Bynder
+  module SearchMethods
+
+    def search(options)
+      # Map common search options to Bynder API parameters
+      params = map_search_params(options)
+
+      # Bynder API v4 media endpoint
+      # Documentation: https://bynder-api-documentation.readme.io/reference/get_api-v4-media
+      # Uses GET /api/v4/media/ with query parameters for filtering
+      r = get('/api/v4/media/', params)
+
+      # Transform Bynder response to common format
+      transformed = transform_search_response(r)
+      Models::SearchResult.new(transformed)
+    end
+
+    def url(asset_id)
+      # Get specific asset details
+      # https://developer-docs.bynder.com/api/v4/media/{id}
+      get("/api/v4/media/#{asset_id}/")
+    end
+
+    def search_for_item_assets(item_no)
+      # Bynder metaproperty filtering is complex because it requires option IDs
+      # Strategy: Use keyword search to narrow results, then filter by property_Item_Number
+      # This combines efficiency of server-side search with accuracy of client-side filtering
+
+      # Use keyword search to get candidate assets
+      result = search(
+        keyword: item_no.to_s,
+        type: 'image',
+        limit: 1000  # Bynder's max limit per request
+      )
+
+      # Filter to only include assets where item_no is actually in property_Item_Number
+      # This prevents false positives from keyword matching other fields
+      filtered_items = result.items.select do |asset|
+        item_numbers = asset['property_Item_Number'] || []
+        item_numbers = [item_numbers] unless item_numbers.is_a?(Array)
+        item_numbers.map(&:to_s).include?(item_no.to_s)
+      end
+
+      # Return a new search result with filtered items
+      Models::SearchResult.new(
+        items: filtered_items,
+        total: filtered_items.size
+      )
+    end
+
+    private
+
+    def map_search_params(options)
+      # Map Webdam-style params to Bynder API params
+      # Bynder API v4 media endpoint supports these parameters:
+      # - keyword: text search across asset fields
+      # - type: filter by asset type (image, video, document, etc.)
+      # - limit: results per page (default 50, max 1000)
+      # - page: page number for pagination
+      # - propertyOptionId: filter by metaproperty values
+      # - brandId: filter by brand
+      # - collectionId: filter by collection
+      # - isPublic: filter public assets (0 or 1)
+      # - dateCreated: filter by creation date
+      # - dateModified: filter by modification date
+
+      params = {}
+
+      # Map query to keyword for text search
+      params[:keyword] = options[:query] if options[:query]
+
+      # Map types (Bynder uses 'type' parameter, can be single value or array)
+      params[:type] = options[:types] if options[:types]
+
+      # Pagination parameters
+      params[:limit] = options[:limit] if options[:limit]
+      params[:page] = options[:page] if options[:page]
+
+      # Additional filters (pass through if provided)
+      params[:propertyOptionId] = options[:propertyOptionId] if options[:propertyOptionId]
+      params[:brandId] = options[:brandId] if options[:brandId]
+      params[:collectionId] = options[:collectionId] if options[:collectionId]
+      params[:isPublic] = options[:isPublic] if options[:isPublic]
+
+      params.compact
+    end
+
+    def transform_search_response(response)
+      # Bynder returns different structure - normalize to match Webdam format
+      # Bynder response: { "data": [...], "count": {...}, "total": n }
+
+      if response.is_a?(Array)
+        items = response
+        total = response.size
+      else
+        items = response['data'] || response['media'] || []
+        total = response['total'] || items.size
+      end
+
+      {
+        items: items,
+        total: total
+      }
+    end
+
+  end
+end
