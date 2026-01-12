@@ -3,6 +3,7 @@
 require 'faraday'
 require 'faraday_middleware'
 require 'hashie'
+require 'parallel'
 
 # Core modules
 require_relative 'dam/errors'
@@ -34,6 +35,7 @@ require_relative 'bynder/asset_methods'
 require_relative 'bynder/models/folder'
 require_relative 'bynder/models/thumbnail'
 require_relative 'bynder/models/asset'
+require_relative 'bynder/models/search_result'
 require_relative 'bynder/client'
 
 module Dam
