@@ -68,9 +68,11 @@ module Bynder
 
       # Map query to keyword for text search
       params[:keyword] = options[:query] if options[:query]
+      params[:keyword] = options[:keyword] if options[:keyword]
 
       # Map types (Bynder uses 'type' parameter, can be single value or array)
-      params[:type] = options[:types] if options[:types]
+      # Support both :type (singular) and :types (plural) for flexibility
+      params[:type] = options[:type] || options[:types] if options[:type] || options[:types]
 
       # Pagination parameters
       params[:limit] = options[:limit] if options[:limit]
