@@ -15,7 +15,7 @@ module Bynder
     # According to https://bynder-api-documentation.readme.io/reference/get_api-v4-media-id-download
     def asset_download_url(asset_id)
       # Fetch the download endpoint which returns JSON with s3_file
-      download_data = get("/v4/media/#{asset_id}/download/")
+      download_data = get("/api/v4/media/#{asset_id}/download/")
       download_data['s3_file']
     end
 
