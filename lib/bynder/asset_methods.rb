@@ -11,6 +11,14 @@ module Bynder
       Dam::Models::XmpMetadata.new(xmp_data)
     end
 
+    # Get the S3 download URL for a Bynder asset
+    # According to https://bynder-api-documentation.readme.io/reference/get_api-v4-media-id-download
+    def asset_download_url(asset_id)
+      # Fetch the download endpoint which returns JSON with s3_file
+      download_data = get("/v4/media/#{asset_id}/download/")
+      download_data['s3_file']
+    end
+
     private
 
     def transform_bynder_metadata(asset_data)
