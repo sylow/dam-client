@@ -16,6 +16,16 @@ module Dam
         raise NotImplementedError, "Subclass must implement pdf_download_url"
       end
 
+      # Generic media/download URL - providers should override
+      def media_url
+        self['mediaUrl'] || self['url']
+      end
+
+      # Alias for consistency
+      def download_url
+        media_url
+      end
+
       # Provider-specific implementations must override this
       def provider_name
         'unknown'

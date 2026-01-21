@@ -33,6 +33,23 @@ module Bynder
         'bynder'
       end
 
+      # Generic download/media URL for all asset types
+      def media_url
+        # For Bynder, construct the download URL using the asset ID
+        # Format: https://{bynder-domain}/api/v4/media/{id}/download/
+        bynder_url = ENV['bynder_api_url']
+        return nil unless bynder_url && self['id']
+
+        # Remove trailing slash from base URL if present
+        base_url = bynder_url.sub(/\/$/, '')
+        "#{base_url}/api/v4/media/#{self['id']}/download/"
+      end
+
+      # Alias for consistency with WebDam
+      def download_url
+        media_url
+      end
+
       # Provide a folder stub since Bynder doesn't return folder in search results
       # but the code expects asset.folder.name
       def folder

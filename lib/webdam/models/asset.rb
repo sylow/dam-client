@@ -16,6 +16,17 @@ module Webdam
         'webdam'
       end
 
+      # Generic download/media URL for all asset types
+      # WebDam includes mediaUrl in the asset data
+      def media_url
+        self['mediaUrl']
+      end
+
+      # Alias for consistency
+      def download_url
+        media_url
+      end
+
       protected
 
       # Webdam-specific XMP metadata fetching
