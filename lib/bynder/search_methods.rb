@@ -26,16 +26,23 @@ module Bynder
       # Strategy: Use keyword search to narrow results, then filter by property_Item_Number
       # This combines efficiency of server-side search with accuracy of client-side filtering
 
-      # Use keyword search to get candidate assets
-      result = search(
-        keyword: item_no.to_s,
-        type: 'image',
-        limit: 1000  # Bynder's max limit per request
-      )
+      # Search for all asset types (images, documents, videos)
+      # Note: Bynder's type parameter doesn't support multiple values in one request
+      # So we need to make separate searches and combine results
+      all_items = []
+
+      ['image', 'document', 'video'].each do |asset_type|
+        result = search(
+          keyword: item_no.to_s,
+          type: asset_type,
+          limit: 1000  # Bynder's max limit per request
+        )
+        all_items.concat(result.items)
+      end
 
       # Filter to only include assets where item_no is actually in property_Item_Number
       # This prevents false positives from keyword matching other fields
-      filtered_items = result.items.select do |asset|
+      filtered_items = all_items.select do |asset|
         item_numbers = asset['property_Item_Number'] || []
         item_numbers = [item_numbers] unless item_numbers.is_a?(Array)
         item_numbers.map(&:to_s).include?(item_no.to_s)

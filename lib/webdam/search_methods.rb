@@ -11,10 +11,12 @@ module Webdam
     end
     
     def search_for_item_assets(item_no)
+      # Search for all asset types (images, documents, videos)
+      # WebDam supports comma-separated types
       search(
         searchfield: 'customfield1',
         query: item_no.to_s,
-        types: 'image'
+        types: 'image,document,video'
       )
     end
 
