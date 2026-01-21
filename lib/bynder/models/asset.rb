@@ -37,12 +37,13 @@ module Bynder
       def media_url
         # For Bynder, construct the download URL using the asset ID
         # Format: https://{bynder-domain}/api/v4/media/{id}/download/
+        # Note: bynder_api_url already includes /api, so we only append /v4/media/...
         bynder_url = ENV['bynder_api_url']
         return nil unless bynder_url && self['id']
 
         # Remove trailing slash from base URL if present
         base_url = bynder_url.sub(/\/$/, '')
-        "#{base_url}/api/v4/media/#{self['id']}/download/"
+        "#{base_url}/v4/media/#{self['id']}/download/"
       end
 
       # Alias for consistency with WebDam
