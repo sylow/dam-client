@@ -55,6 +55,54 @@ module Bynder
       )
     end
 
+    def search_for_featured_products(limit_pages: nil)
+      # Fetch all assets marked with Product_Featured in property_Asset_Sub-Type
+      # Since Bynder's propertyOptionId filter may not work reliably for metaproperty values,
+      # we use a keyword search and then filter client-side for accuracy
+      #
+      # Parameters:
+      #   limit_pages: Optional max number of pages to fetch. Useful for testing or when dealing
+      #                with very large result sets. If nil, fetches all pages.
+
+      all_items = []
+      page = 1
+      pages_fetched = 0
+
+      loop do
+        result = search(
+          keyword: 'Product_Featured',
+          type: 'image',
+          limit: 1000,  # Bynder's max limit per request
+          page: page
+        )
+
+        break if result.items.empty?
+        all_items.concat(result.items)
+        pages_fetched += 1
+
+        # Check pagination limit if specified
+        break if limit_pages && pages_fetched >= limit_pages
+
+        # If we got fewer items than the limit, we've reached the end
+        break if result.items.size < 1000
+
+        page += 1
+      end
+
+      # Filter to only include assets where property_Asset_Sub-Type contains 'Product_Featured'
+      filtered_items = all_items.select do |asset|
+        sub_types = asset['property_Asset_Sub-Type'] || []
+        sub_types = [sub_types] unless sub_types.is_a?(Array)
+        sub_types.map(&:to_s).include?('Product_Featured')
+      end
+
+      # Return search result with all featured product images
+      Models::SearchResult.new(
+        items: filtered_items,
+        total: filtered_items.size
+      )
+    end
+
     private
 
     def map_search_params(options)
